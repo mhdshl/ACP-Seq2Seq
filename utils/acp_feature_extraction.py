@@ -189,13 +189,13 @@ def readFASTAs(fileName):
 # Sequences = readFASTAs(path_to_file)
 
 def ensure(path_to_file):
-  Sequences = readFASTAs(path_to_file)
+    Sequences = readFASTAs(path_to_file)
     for seq in Sequences:
         if check(seq) == False:
             return False
         #end-if
     #end-for
-    return True
+return True
 #end-def
 
 
