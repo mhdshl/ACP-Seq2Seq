@@ -5,3 +5,7 @@ The trained_models folder contains trained models for the papers ACP-DL and ACP-
 
 ## Data
 The folder data contains different peptide sequence dataset
+
+
+## utils
+The folder utils contains the feature extraction and peptide sequence encoding functions used for testing the synthesized ACPs 
