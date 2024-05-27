@@ -101,13 +101,13 @@ def build_model(acp240, acp740, embedding_dim= 256, rnn_units= 1024, batch_size=
   ])
   return model
 
-def generate_random_text(acp240, acp740, min_thres=10, max_thres=250, num_generate = 500):
+def generate_random_text(aa2idx, idx2aa, min_thres=11, max_thres=97, num_generate = 500):
   start_string=u"\n"
   ACP_ID = 1
 
-  acp_txt = seq_to_text(acp240, acp740)
+  # acp_txt = seq_to_text(acp240, acp740)
 
-  aa2idx, idx2aa, aa_as_int, aa_dict = unique_chars(acp_txt)
+  # aa2idx, idx2aa, aa_as_int, aa_dict = unique_chars(acp_txt)
   input_eval = [aa2idx[s] for s in start_string]
   input_eval = tf.expand_dims(input_eval, 0)
 
@@ -137,9 +137,9 @@ def generate_random_text(acp240, acp740, min_thres=10, max_thres=250, num_genera
 
   return (''.join(text_filtered))
 
-def write_random_text(acp240, acp740, filename='random_from_func.txt', num_generate=5000):
+def write_random_text(aa2idx, idx2aa, min_threshold, max_threshold, filename='random_from_func.txt', num_generate=5000):
   f = open(filename, 'w')
-  f.write(generate_random_text(acp240, acp740, num_generate = 50000))
+  f.write(generate_random_text(aa2idx, idx2aa, min_threshold, max_threshold, num_generate))
   f.close()
 
 def loss(labels, logits):
