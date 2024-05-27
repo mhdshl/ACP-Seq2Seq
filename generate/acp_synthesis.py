@@ -90,8 +90,8 @@ def create_dataset(acp240, acp740, BATCH_SIZE = 64, BUFFER_SIZE = 10000):
   dataset = dataset.shuffle(BUFFER_SIZE).batch(BATCH_SIZE, drop_remainder=True)
   return dataset
 
-def build_model(acp240, acp740, embedding_dim= 256, rnn_units= 1024, batch_size=64):
-  seq_batch, aa_dataset, idx2aa, aa_dict = create_batch(acp240, acp740)
+def build_model(aa_dict, embedding_dim= 256, rnn_units= 1024, batch_size=64):
+  # seq_batch, aa_dataset, idx2aa, aa_dict = create_batch(acp240, acp740)
   aa_dict_size= len(aa_dict)
   model = tf.keras.Sequential([
     tf.keras.layers.Embedding(aa_dict_size, embedding_dim, batch_input_shape = [batch_size, None]),
@@ -145,38 +145,38 @@ def write_random_text(aa2idx, idx2aa, min_threshold, max_threshold, filename='ra
 def loss(labels, logits):
   return tf.keras.losses.sparse_categorical_crossentropy(labels, logits, from_logits=True)
 
-def train_gen_model(acp240, acp740, EPOCHS=100):
-  model = build_model(acp240, acp740)
+def train_gen_model(dataset, aa_dict, embedding_dim= 256, rnn_units= 1024, batch_size=64, EPOCHS=100):
+  # seq_batch, aa_dataset, idx2aa, aa_dict = create_batch(acp240, acp740)
+  # dataset = seq_batch.map(split_input_target)
+  # dataset = create_dataset(acp240, acp740)
+  model = build_model(aa_dict, embedding_dim, rnn_units, batch_size)
   model.compile(optimizer='adam', loss=loss)
   checkpoint_dir = './training_checkpoints'
 
   # Name of the checkpoint files
-  checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt_{epoch}")
+  checkpoint_prefix = os.path.join(checkpoint_dir, "model_epoch_{epoch}")
   es = EarlyStopping(monitor='loss', mode='min', verbose=0, patience=25)
 
   checkpoint_callback=tf.keras.callbacks.ModelCheckpoint(
       filepath=checkpoint_prefix,
       save_weights_only=True)
 
-  seq_batch, aa_dataset, idx2aa, aa_dict = create_batch(acp240, acp740)
-  dataset = seq_batch.map(split_input_target)
-  dataset = create_dataset(acp240, acp740)
   # EPOCHS=100
   history = model.fit(dataset, epochs=EPOCHS, callbacks=[checkpoint_callback, es], verbose=2)
   # restore checkpoint
   tf.train.latest_checkpoint(checkpoint_dir)
   # load model
-  model = build_model(acp240, acp740, batch_size=1)
+  model = build_model(aa_dict, embedding_dim, rnn_units, batch_size=1)
   model.load_weights(tf.train.latest_checkpoint(checkpoint_dir))
   model.build(tf.TensorShape([1, None]))
   return model
 
-def generate_text(acp240, acp740, model, start_string, min_thres=10, max_thres=250, num_generate = 5000, temperature = 1.0):
+def generate_text(dataset, aa2idx, idx2aa, model, start_string=u"\n", min_thres=10, max_thres=250, num_generate = 5000, temperature = 1.0):
 
   ACP_ID = 1
-  acp_txt = seq_to_text(acp240, acp740)
+  # acp_txt = seq_to_text(acp240, acp740)
 
-  aa2idx, idx2aa, aa_as_int, aa_dict = unique_chars(acp_txt)
+  # aa2idx, idx2aa, aa_as_int, aa_dict = unique_chars(acp_txt)
 
   # Converting our start string to numbers (vectorizing)
   input_eval = [aa2idx[s] for s in start_string]
@@ -220,10 +220,10 @@ def generate_text(acp240, acp740, model, start_string, min_thres=10, max_thres=2
 
   return (''.join(text_filtered))
 
-def write_file(acp240, acp740, model, filename='gen_from_function.txt', start_string=u"\n", num_generate = 5000):
+def write_file(dataset,aa2idx,idx2aa,model,min_thres=11,max_thres=97,filename='gen_from_model.txt',start_string=u"\n",num_generate=5000,temperature=1.0):
   # Evaluation step (generating text using the learned model
   f = open(filename, 'w')
-  f.write(generate_text(acp240, acp740, model, start_string=u"\n", num_generate = 5000))
+  f.write(generate_text(dataset,aa2idx,idx2aa, model,min_thres,max_thres, start_string, num_generate, temperature))
   f.close()
 
 def train_and_generate_text(acp240, acp740, start_string, min_thres=10, max_thres=250, num_generate = 5000, temperature = 1.0):
