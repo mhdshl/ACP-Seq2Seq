@@ -64,7 +64,7 @@ def preprocess(dataset_path):
 #   return acp_txt
 def seq_to_text(dataset_path):
   acp_id, acp_seq = preprocess(dataset_path)
-  acp_txt = '\n'.join(acp240_seq)
+  acp_txt = '\n'.join(acp_seq)
   return acp_txt
 
 ## Unique characters in the sequeces
