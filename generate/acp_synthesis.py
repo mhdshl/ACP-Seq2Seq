@@ -94,9 +94,9 @@ def unique_chars(acp_txt):
 #   ## Create batch dataset using batch method in tf.Dataset class
 #   seq_batch = aa_dataset.batch(seq_length+1, drop_remainder=True) ## drop the smaller batch
 #   return seq_batch, aa_dataset, idx2aa, aa_dict
-def create_batch(dataset_path, seq_length = 64):
+def create_batch(acp_txt, seq_length = 64):
   # seq_length = 64
-  acp_txt = seq_to_text(dataset_path)
+  # acp_txt = seq_to_text(dataset_path)
   aa2idx, idx2aa, aa_as_int, aa_dict = unique_chars(acp_txt)
   examples_per_epoch = len(acp_txt)//(seq_length+1) ## '//' division & floor (내림)
 
@@ -118,8 +118,8 @@ def split_input_target(chunk):
 #   dataset = dataset.shuffle(BUFFER_SIZE).batch(BATCH_SIZE, drop_remainder=True)
 #   return dataset
 
-def create_dataset(dataset_path, BATCH_SIZE = 64, BUFFER_SIZE = 10000):
-  seq_batch, aa_dataset, idx2aa, aa_dict = create_batch(dataset_path)
+def create_dataset(acp_txt, BATCH_SIZE = 64, BUFFER_SIZE = 10000):
+  seq_batch, aa_dataset, idx2aa, aa_dict = create_batch(acp_txt)
   dataset = seq_batch.map(split_input_target)
   dataset = dataset.shuffle(BUFFER_SIZE).batch(BATCH_SIZE, drop_remainder=True)
   return dataset
