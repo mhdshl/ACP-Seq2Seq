@@ -22,33 +22,49 @@ import numpy as np
 import pandas as pd
 from keras.callbacks import EarlyStopping
 
-# list(acp240[0][0])
-def preprocess(acp240, acp740):
-  acp240_id = []
-  acp240_seq = []
-  for text in acp240[0]:
-    if ('>' in list(text)):
-      acp240_id.append(text)
-    else:
-      acp240_seq.append(text)
+# # list(acp240[0][0])
+# def preprocess(acp240, acp740):
+#   acp240_id = []
+#   acp240_seq = []
+#   for text in acp240[0]:
+#     if ('>' in list(text)):
+#       acp240_id.append(text)
+#     else:
+#       acp240_seq.append(text)
 
-  ## preprocess acp740
-  acp740_id = []
-  acp740_seq = []
-  for text in acp740[0]:
-    if ('>' in list(text)):
-      acp740_id.append(text)
-    else:
-      acp740_seq.append(text)
+#   ## preprocess acp740
+#   acp740_id = []
+#   acp740_seq = []
+#   for text in acp740[0]:
+#     if ('>' in list(text)):
+#       acp740_id.append(text)
+#     else:
+#       acp740_seq.append(text)
 
-  return acp240_id, acp240_seq, acp740_id, acp740_seq
+#   return acp240_id, acp240_seq, acp740_id, acp740_seq
+
+def preprocess(dataset_path):
+  acp_id = []
+  acp_seq = []
+  for text in dataset_path[0]:
+    if ('>' in list(text)):
+      acp_id.append(text)
+    else:
+      acp_seq.append(text)
+
+
+  return acp_id, acp_seq
 
 ## seq_to_text
-def seq_to_text(acp240, acp740):
-  acp240_id, acp240_seq, acp740_id, acp740_seq = preprocess(acp240, acp740)
-  acp240_txt = '\n'.join(acp240_seq)
-  acp740_txt = '\n'.join(acp740_seq)
-  acp_txt = acp240_txt + '\n' + acp740_txt
+# def seq_to_text(acp240, acp740):
+#   acp240_id, acp240_seq, acp740_id, acp740_seq = preprocess(acp240, acp740)
+#   acp240_txt = '\n'.join(acp240_seq)
+#   acp740_txt = '\n'.join(acp740_seq)
+#   acp_txt = acp240_txt + '\n' + acp740_txt
+#   return acp_txt
+def seq_to_text(dataset_path):
+  acp_id, acp_seq = preprocess(dataset_path)
+  acp_txt = '\n'.join(acp240_seq)
   return acp_txt
 
 ## Unique characters in the sequeces
@@ -66,9 +82,21 @@ def unique_chars(acp_txt):
   aa_as_int = np.array([aa2idx[u] for u in acp_txt]) # don't forget bracket '[]' to make it accessible.
   return aa2idx, idx2aa, aa_as_int, aa_dict
 
-def create_batch(acp240, acp740, seq_length = 64):
+# def create_batch(acp240, acp740, seq_length = 64):
+#   # seq_length = 64
+#   acp_txt = seq_to_text(acp240, acp740)
+#   aa2idx, idx2aa, aa_as_int, aa_dict = unique_chars(acp_txt)
+#   examples_per_epoch = len(acp_txt)//(seq_length+1) ## '//' division & floor (내림)
+
+#   ## Create tensorflow dataset
+#   aa_dataset = tf.data.Dataset.from_tensor_slices(aa_as_int)
+
+#   ## Create batch dataset using batch method in tf.Dataset class
+#   seq_batch = aa_dataset.batch(seq_length+1, drop_remainder=True) ## drop the smaller batch
+#   return seq_batch, aa_dataset, idx2aa, aa_dict
+def create_batch(dataset_path, seq_length = 64):
   # seq_length = 64
-  acp_txt = seq_to_text(acp240, acp740)
+  acp_txt = seq_to_text(dataset_path)
   aa2idx, idx2aa, aa_as_int, aa_dict = unique_chars(acp_txt)
   examples_per_epoch = len(acp_txt)//(seq_length+1) ## '//' division & floor (내림)
 
@@ -84,15 +112,31 @@ def split_input_target(chunk):
     target_seq = chunk[1:]
     return input_seq, target_seq
 
-def create_dataset(acp240, acp740, BATCH_SIZE = 64, BUFFER_SIZE = 10000):
-  seq_batch, aa_dataset, idx2aa, aa_dict = create_batch(acp240, acp740)
+# def create_dataset(acp240, acp740, BATCH_SIZE = 64, BUFFER_SIZE = 10000):
+#   seq_batch, aa_dataset, idx2aa, aa_dict = create_batch(acp240, acp740)
+#   dataset = seq_batch.map(split_input_target)
+#   dataset = dataset.shuffle(BUFFER_SIZE).batch(BATCH_SIZE, drop_remainder=True)
+#   return dataset
+
+def create_dataset(dataset_path, BATCH_SIZE = 64, BUFFER_SIZE = 10000):
+  seq_batch, aa_dataset, idx2aa, aa_dict = create_batch(dataset_path)
   dataset = seq_batch.map(split_input_target)
   dataset = dataset.shuffle(BUFFER_SIZE).batch(BATCH_SIZE, drop_remainder=True)
   return dataset
 
-def build_model(aa_dict, embedding_dim= 256, rnn_units= 1024, batch_size=64):
+# def build_model(aa_dict, embedding_dim= 256, rnn_units= 1024, batch_size=64):
+#   # seq_batch, aa_dataset, idx2aa, aa_dict = create_batch(acp240, acp740)
+#   aa_dict_size= len(aa_dict)
+#   model = tf.keras.Sequential([
+#     tf.keras.layers.Embedding(aa_dict_size, embedding_dim, batch_input_shape = [batch_size, None]),
+#     tf.keras.layers.GRU(rnn_units, return_sequences=True, stateful=True, recurrent_initializer='glorot_uniform', reset_after=True),
+#     tf.keras.layers.GRU(rnn_units, return_sequences=True, stateful=True, recurrent_initializer='glorot_uniform', reset_after=True),
+#     tf.keras.layers.Dense(aa_dict_size)
+#   ])
+#   return model
+def build_model(aa_dict_size=21, embedding_dim= 256, rnn_units= 1024, batch_size=64):
   # seq_batch, aa_dataset, idx2aa, aa_dict = create_batch(acp240, acp740)
-  aa_dict_size= len(aa_dict)
+  # aa_dict_size= len(aa_dict)
   model = tf.keras.Sequential([
     tf.keras.layers.Embedding(aa_dict_size, embedding_dim, batch_input_shape = [batch_size, None]),
     tf.keras.layers.GRU(rnn_units, return_sequences=True, stateful=True, recurrent_initializer='glorot_uniform', reset_after=True),
@@ -171,7 +215,7 @@ def train_gen_model(dataset, aa_dict, embedding_dim= 256, rnn_units= 1024, batch
   model.build(tf.TensorShape([1, None]))
   return model
 
-def generate_text(dataset, aa2idx, idx2aa, model, start_string=u"\n", min_thres=10, max_thres=250, num_generate = 5000, temperature = 1.0):
+def generate_text(aa2idx, idx2aa, model, start_string=u"\n", min_thres=10, max_thres=250, num_generate = 5000, temperature = 1.0):
 
   ACP_ID = 1
   # acp_txt = seq_to_text(acp240, acp740)
@@ -220,10 +264,10 @@ def generate_text(dataset, aa2idx, idx2aa, model, start_string=u"\n", min_thres=
 
   return (''.join(text_filtered))
 
-def write_file(dataset,aa2idx,idx2aa,model,min_thres=11,max_thres=97,filename='gen_from_model.txt',start_string=u"\n",num_generate=5000,temperature=1.0):
+def write_file(aa2idx,idx2aa,model,min_thres=11,max_thres=97,filename='gen_from_model.txt',start_string=u"\n",num_generate=5000,temperature=1.0):
   # Evaluation step (generating text using the learned model
   f = open(filename, 'w')
-  f.write(generate_text(dataset,aa2idx,idx2aa, model,min_thres,max_thres, start_string, num_generate, temperature))
+  f.write(generate_text(aa2idx,idx2aa, model,min_thres,max_thres, start_string, num_generate, temperature))
   f.close()
 
 def train_and_generate_text(acp240, acp740, start_string, min_thres=10, max_thres=250, num_generate = 5000, temperature = 1.0):
