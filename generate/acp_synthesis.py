@@ -189,11 +189,11 @@ def write_random_text(aa2idx, idx2aa, min_threshold, max_threshold, filename='ra
 def loss(labels, logits):
   return tf.keras.losses.sparse_categorical_crossentropy(labels, logits, from_logits=True)
 
-def train_gen_model(dataset, aa_dict, embedding_dim= 256, rnn_units= 1024, batch_size=64, EPOCHS=100):
+def train_gen_model(dataset, aa_dict_size=21, embedding_dim= 256, rnn_units= 1024, batch_size=64, EPOCHS=100):
   # seq_batch, aa_dataset, idx2aa, aa_dict = create_batch(acp240, acp740)
   # dataset = seq_batch.map(split_input_target)
   # dataset = create_dataset(acp240, acp740)
-  model = build_model(aa_dict, embedding_dim, rnn_units, batch_size)
+  model = build_model(aa_dict_size, embedding_dim, rnn_units, batch_size)
   model.compile(optimizer='adam', loss=loss)
   checkpoint_dir = './training_checkpoints'
 
@@ -210,7 +210,7 @@ def train_gen_model(dataset, aa_dict, embedding_dim= 256, rnn_units= 1024, batch
   # restore checkpoint
   tf.train.latest_checkpoint(checkpoint_dir)
   # load model
-  model = build_model(aa_dict, embedding_dim, rnn_units, batch_size=1)
+  model = build_model(aa_dict_size, embedding_dim, rnn_units, batch_size=1)
   model.load_weights(tf.train.latest_checkpoint(checkpoint_dir))
   model.build(tf.TensorShape([1, None]))
   return model
