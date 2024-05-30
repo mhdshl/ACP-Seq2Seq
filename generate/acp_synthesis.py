@@ -145,7 +145,7 @@ def build_model(aa_dict_size=21, embedding_dim= 256, rnn_units= 1024, batch_size
   ])
   return model
 
-def generate_random_text(aa2idx, idx2aa, label = 'non-ACP', min_thres=11, max_thres=97, num_generate = 500):
+def generate_random_text(aa2idx, idx2aa, label = "non-ACP", min_thres=11, max_thres=97, num_generate = 500):
   start_string=u"\n"
   ACP_ID = 1
 
