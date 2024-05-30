@@ -176,7 +176,7 @@ def generate_random_text(aa2idx, idx2aa, min_thres=11, max_thres=97, num_generat
     elif(len(text_unfiltered[j]) > max_thres):
       next
     else:
-      text_filtered.append('>non-ACP_'+str(ACP_ID)+'|'+'1' + start_string + ''.join(text_unfiltered[j])+'\n')
+      text_filtered.append('>non-ACP_'+str(ACP_ID)+'|'+'0' + start_string + ''.join(text_unfiltered[j])+'\n')
       ACP_ID += 1
 
   return (''.join(text_filtered))
